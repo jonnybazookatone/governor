@@ -1,0 +1,16 @@
+{
+	"ImportPath": "github.com/adsabs/governor",
+	"GoVersion": "go1.4.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/hashicorp/consul/api",
+			"Comment": "v0.5.2-183-g4a9b91f",
+			"Rev": "4a9b91f2a2021efe256005d433ffe52b3e8eac06"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.0-17-g089c718",
+			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
+		}
+	]
+}
