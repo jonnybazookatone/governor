@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"net/http/httptest"
 	"encoding/base64"
+	"io/ioutil"
+	"os"
 )
 
 type StubConfig struct {
@@ -20,7 +22,7 @@ func TestConsulAccess(t *testing.T) {
 	expected := StubConfig{key: "ssl_key", value: "/path/to/key"}
 	
 	// Test server that always responds with 200 code, and specific payload
-    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		valueBase64 := base64.StdEncoding.EncodeToString([]byte(expected.value))
 
@@ -33,7 +35,7 @@ func TestConsulAccess(t *testing.T) {
 		    "Value": "%s",
 		    "Session": "adf4238a-882b-9ddc-4a9d-5b6758e4159e"
   		}]`, valueBase64)
-		
+
 		fmt.Fprintln(w, response)
 	}))
 	
@@ -56,5 +58,21 @@ func TestConsulAccess(t *testing.T) {
 }
 
 func TestParseFileCorrectly(t *testing.T) {
+	
+	// Make a stub file
+	stubContent := []byte("key config_file.conf")
+	err := ioutil.WriteFile("config_file.conf", stubContent, 0644)
+	if err != nil{
+		panic(err)
+	}
+	
+	// Load the config file
+	config := GetConfigFromFile("config_file.conf")
+	assert.Equal(t, len(config), 1, "The length of the config should be 1")
+	
+	err = os.Remove("config_file.conf")
+	if err != nil {
+		panic(err)
+	}
 	
 }
