@@ -50,3 +50,12 @@ func GetConfigFromFile (fileName string) map[string]string {
 	
 	return configMap
 }
+
+func MakeConfigFiles (configMap map[string]string) {
+	
+	for filePath, fileContents := range configMap {
+		// Write the file with its relevant contents
+		ioutil.WriteFile(filePath, []byte(fileContents), 0644)		
+	}
+	
+}

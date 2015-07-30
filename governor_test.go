@@ -82,6 +82,36 @@ func TestParseFileCorrectly(t *testing.T) {
 	
 }
 
-func TestLoadConfigPullConsul(t *testing.T) {
+func TestConsulWriteToDisk(t *testing.T) {
+	
+	expected_file := "config.conf"
+	
+	stubMap := map[string]string{
+		expected_file: `{"ssl_key": "/path/to/key"}`,
+	}
+
+	// Generate a file from the stub data
+	MakeConfigFiles(stubMap)
+	
+	// Check that the config file was created
+	_, err := os.Stat(expected_file)
+	assert.Nil(t, err)
+
+	// This is only called if the first assertion passes
+	defer os.Remove(expected_file)
+
+	// Check the contents is sensible
+	contents, err := ioutil.ReadFile(expected_file)
+	if err != nil {
+		panic(err)
+	}
+	
+	// Check the file contains relevant information
+	assert.Contains(
+		t,
+		string(contents),
+		"ssl_key",
+		"The output should contain specific text, but it does not",
+	)
 	
 }
