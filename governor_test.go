@@ -1,5 +1,5 @@
 // governor_test.go
-package governor
+package main
 
 import (
 	"fmt"
@@ -114,4 +114,75 @@ func TestConsulWriteToDisk(t *testing.T) {
 		"The output should contain specific text, but it does not",
 	)
 	
+}
+
+func TestGovern(t *testing.T) {
+	
+	
+	// Start the test server that intercepts our requests
+	stubConsulResponse := StubConfig{key: "ssl_key", value: `{"ouput": "disk"}`}
+	stubGovernorConfig := StubConfig{key: "ssl_key", value: "lsf.conf"}
+	
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		valueBase64 := base64.StdEncoding.EncodeToString([]byte(stubConsulResponse.value))
+
+		response := fmt.Sprintf(`[{
+			"CreateIndex": 100,
+		    "ModifyIndex": 200,
+		    "LockIndex": 200,
+		    "Key": "%s",
+		    "Flags": 0,
+		    "Value": "%s",
+		    "Session": "adf4238a-882b-9ddc-4a9d-5b6758e4159e"
+  		}]`, stubConsulResponse.key, valueBase64)
+
+		fmt.Fprintln(w, response)
+	}))
+	
+	defer server.Close()
+
+	// Make a transport that reroutes all traffic to the example server
+	transport := &http.Transport{
+		Proxy: func(req *http.Request) (*url.URL, error) {
+			return url.Parse(server.URL)
+		},
+	}
+
+	// Make a http.Client with the transport
+	httpClient := &http.Client{Transport: transport}	
+	
+	// Make a stub config file
+	stubConfig := "governor.conf"
+	stubContent := fmt.Sprintf(`{"%s": "%s"}`, 
+							stubGovernorConfig.key,
+							stubGovernorConfig.value)
+	err := ioutil.WriteFile(stubConfig, []byte(stubContent), 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove(stubConfig)
+	
+	// Lets run the routine
+	Govern(stubConfig, httpClient)
+
+	// Check that the config file was created
+	_, err = os.Stat(stubGovernorConfig.value)
+	assert.Nil(t, err)
+	defer os.Remove(stubGovernorConfig.value)
+	
+	// Check the contents is sensible
+	var contents []byte
+	contents, err = ioutil.ReadFile(stubGovernorConfig.value)
+	if err != nil {
+		panic(err)
+	}
+		
+	// Check the file contains relevant information
+	assert.Contains(
+		t,
+		string(contents),
+		stubConsulResponse.value,
+		"The output should contain specific text, but it does not",
+	)
 }

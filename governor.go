@@ -1,7 +1,10 @@
 // governor
-package governor
+package main
 
 import (
+	"os"
+	"flag"
+	"fmt"
 	"net/http"
 	"github.com/hashicorp/consul/api"
 	"io/ioutil"
@@ -57,5 +60,47 @@ func MakeConfigFiles (configMap map[string]string) {
 		// Write the file with its relevant contents
 		ioutil.WriteFile(filePath, []byte(fileContents), 0644)		
 	}
+
+}
+
+func checkFileExists(fileName string) {
+	_, err := os.Stat(fileName)
+	if err != nil {
+		fmt.Println("You need to specify a config file that exists.")
+		panic(err)
+	}	
+}
+
+func Govern (configFile string, defaultClient *http.Client) {
 	
+	// Parse the config file
+	configMap := GetConfigFromFile(configFile)
+	
+	// Obtain the content from Consul and place in map
+	var configContent string
+	outputConfigMap := make(map[string]string)
+	
+	for consulKey, configPath := range configMap {
+		configContent = GetAttribute(consulKey, defaultClient)
+		
+		outputConfigMap[configPath] = configContent
+	}
+	
+	// Make the config files
+	MakeConfigFiles(outputConfigMap)
+}
+
+func main () {
+	
+	// Definitions of allowed input flags
+	configFilePtr := flag.String("config", "governor.conf", "Config file.")
+	
+	// Parse all the flags based on definitions
+	flag.Parse()
+	
+	// Check config file exists
+	checkFileExists(*configFilePtr)
+	
+	// Runtime routine
+	Govern(*configFilePtr, nil)
 }
