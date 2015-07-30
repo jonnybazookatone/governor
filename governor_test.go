@@ -59,20 +59,29 @@ func TestConsulAccess(t *testing.T) {
 
 func TestParseFileCorrectly(t *testing.T) {
 	
+	expected := StubConfig{key: "ssl_key", value: "/path/to/key"}
+
 	// Make a stub file
-	stubContent := []byte("key config_file.conf")
-	err := ioutil.WriteFile("config_file.conf", stubContent, 0644)
-	if err != nil{
-		panic(err)
-	}
-	
-	// Load the config file
-	config := GetConfigFromFile("config_file.conf")
-	assert.Equal(t, len(config), 1, "The length of the config should be 1")
-	
-	err = os.Remove("config_file.conf")
+	stubFileName := "config_file.conf"
+	stubContent := fmt.Sprintf(`{"%s": "%s"}`, expected.key, expected.value)
+	err := ioutil.WriteFile(stubFileName, []byte(stubContent), 0644)
 	if err != nil {
 		panic(err)
 	}
+	
+	// Cleanup the file that was made
+	defer os.Remove(stubFileName)
+	
+	// Load the config file
+	config := GetConfigFromFile(stubFileName)
+	
+	// Check that the key exists
+	value, ok := config[expected.key]	
+	assert.True(t, ok)
+	assert.Equal(t, value, expected.value)
+	
+}
+
+func TestLoadConfigPullConsul(t *testing.T) {
 	
 }

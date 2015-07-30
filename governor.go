@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"github.com/hashicorp/consul/api"
 	"io/ioutil"
+	"encoding/json"
 )
 
 func GetAttribute (key string, defaultClient *http.Client) string {
@@ -35,7 +36,7 @@ func GetAttribute (key string, defaultClient *http.Client) string {
 	return stringValue
 }
 
-func GetConfigFromFile (fileName string) string {
+func GetConfigFromFile (fileName string) map[string]string {
 	
 	// Open the file
 	contents, err := ioutil.ReadFile(fileName)
@@ -43,5 +44,9 @@ func GetConfigFromFile (fileName string) string {
 		panic(err)
 	}
 	
-	return string(contents)
+	// Unmarshal the JSON content
+	configMap := make(map[string]string)
+	json.Unmarshal(contents, &configMap)
+	
+	return configMap
 }
