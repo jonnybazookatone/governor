@@ -93,7 +93,7 @@ func Govern (configFile string, defaultClient *http.Client) {
 func main () {
 	
 	// Definitions of allowed input flags
-	configFilePtr := flag.String("config", "governor.conf", "Config file.")
+	configFilePtr := flag.String("config", "govern.conf", "Config file.")
 	
 	// Parse all the flags based on definitions
 	flag.Parse()
