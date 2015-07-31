@@ -88,7 +88,7 @@ func MakeConfigFiles(configMap map[string]string) {
 		if src == nil {
 			// Create folder
 			log.Println("Folder does not exist, making:", dirPath)
-			err := os.MkdirAll(dirPath, 0644)
+			err := os.MkdirAll(dirPath, 0777)
 			if err != nil {
 				log.Fatal("Unexpected error: ", err)
 			}
@@ -99,7 +99,7 @@ func MakeConfigFiles(configMap map[string]string) {
 
 		// Write the file with its relevant contents
 		log.Printf("Writing config file %s\n", filePath)
-		ioutil.WriteFile(filePath, []byte(fileContents), 0644)
+		ioutil.WriteFile(filePath, []byte(fileContents), 0777)
 	}
 
 }
