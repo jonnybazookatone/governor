@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -80,6 +81,22 @@ func GetConfigFromFile(fileName string) map[string]string {
 func MakeConfigFiles(configMap map[string]string) {
 
 	for filePath, fileContents := range configMap {
+
+		// Does the output folder exist? If not, make it
+		dirPath, _ := filepath.Abs(filepath.Dir(filePath))
+		src, err := os.Stat(dirPath)
+		if src == nil {
+			// Create folder
+			log.Println("Folder does not exist, making:", dirPath)
+			err := os.MkdirAll(dirPath, 0644)
+			if err != nil {
+				log.Fatal("Unexpected error: ", err)
+			}
+
+		} else if err != nil {
+			log.Fatal("Unexpected error: ", src, err)
+		}
+
 		// Write the file with its relevant contents
 		log.Printf("Writing config file %s\n", filePath)
 		ioutil.WriteFile(filePath, []byte(fileContents), 0644)

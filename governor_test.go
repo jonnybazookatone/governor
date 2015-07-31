@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -114,6 +115,49 @@ func TestConsulWriteToDisk(t *testing.T) {
 		"The output should contain specific text, but it does not",
 	)
 
+}
+
+func TestWriteToNewFolder(t *testing.T) {
+
+	expected_file := "new_folder/config.conf"
+
+	stubMap := map[string]string{
+		expected_file: `{"ssl_key": "/path/to/key"}`,
+	}
+
+	// Generate a file from the stub data
+	MakeConfigFiles(stubMap)
+
+	// Need to clean up the generated folder after the test
+	filePath, _ := filepath.Abs(filepath.Dir(expected_file))
+
+	// Check that the config file was created
+	_, err := os.Stat(expected_file)
+	assert.Nil(t, err)
+
+	// Clean up files/folders. This is only called if the first assertion passes
+	defer func() {
+		os.Remove(expected_file)
+		err := os.Remove(filePath)
+		if err != nil {
+			fmt.Println("Deleting file/folder had problem:", err)
+			panic(err)
+		}
+	}()
+
+	// Check the contents is sensible
+	contents, err := ioutil.ReadFile(expected_file)
+	if err != nil {
+		panic(err)
+	}
+
+	// Check the file contains relevant information
+	assert.Contains(
+		t,
+		string(contents),
+		"ssl_key",
+		"The output should contain specific text, but it does not",
+	)
 }
 
 func TestGovern(t *testing.T) {
