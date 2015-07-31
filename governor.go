@@ -5,10 +5,16 @@ import (
 	"os"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"github.com/hashicorp/consul/api"
 	"io/ioutil"
 	"encoding/json"
+)
+
+const (
+	CONSUL_ADDRESS string = "CONSUL_HOST"
+	CONSUL_PORT string = "CONSUL_PORT"
 )
 
 func GetAttribute (key string, defaultClient *http.Client) string {
@@ -21,6 +27,18 @@ func GetAttribute (key string, defaultClient *http.Client) string {
 		config.HttpClient = defaultClient	
 	}
 	
+	// Check environment variables
+	consulPort := os.Getenv(CONSUL_PORT)
+	if consulPort == "" {
+		consulPort = "8500"
+	}
+	
+	if consulAddress := os.Getenv(CONSUL_ADDRESS); consulAddress != "" {
+		config.Address = consulAddress + ":" + consulPort
+	}
+	log.Println("Set the address to: ", config.Address)
+	
+	// Load the client
 	client, _ := api.NewClient(config)
 	
 	// Key-value end point
@@ -28,6 +46,7 @@ func GetAttribute (key string, defaultClient *http.Client) string {
 	
 	keyValue, _, err := kv.Get(key, nil)
 	if err != nil {
+		log.Println("error!!", err)
 		panic(err)
 	}
 	
