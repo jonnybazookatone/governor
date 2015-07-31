@@ -44,16 +44,20 @@ func GetAttribute (key string, defaultClient *http.Client) string {
 	// Key-value end point
 	kv := client.KV()
 	
+        log.Println("Attempting to retrieve key: ", key)
 	keyValue, _, err := kv.Get(key, nil)
 	if err != nil {
-		log.Println("error!!", err)
-		panic(err)
+                log.Fatal("Error raised when attempting to get keys from consul: ", err)
 	}
-	
+        if keyValue == nil {
+                log.Fatal("Key supplied returned a nil value - does it exist: ", keyValue)
+        }
+
 	// Get the value and convert to string
 	byteValue := keyValue.Value
 	
 	stringValue := string(byteValue[:])
+        log.Println("Consul returned", stringValue)
 
 	return stringValue
 }
@@ -77,6 +81,7 @@ func MakeConfigFiles (configMap map[string]string) {
 	
 	for filePath, fileContents := range configMap {
 		// Write the file with its relevant contents
+                log.Printf("Writing config file %s\n", filePath)
 		ioutil.WriteFile(filePath, []byte(fileContents), 0644)		
 	}
 
@@ -112,7 +117,7 @@ func Govern (configFile string, defaultClient *http.Client) {
 func main () {
 	
 	// Definitions of allowed input flags
-	configFilePtr := flag.String("config", "govern.conf", "Config file.")
+	configFilePtr := flag.String("c", "govern.conf", "Config file.")
 	
 	// Parse all the flags based on definitions
 	flag.Parse()
@@ -121,5 +126,6 @@ func main () {
 	checkFileExists(*configFilePtr)
 	
 	// Runtime routine
+        log.Println("Using config file: ", *configFilePtr)
 	Govern(*configFilePtr, nil)
 }
